@@ -1,6 +1,6 @@
 {
 	"scripts": {
-		"build": "sass assets/scss/contact-form.scss assets/css/contact-form.css --style=compressed --no-source-map",
+		"build": "sass assets/scss/contact-form.scss assets/css/contact-form.css --style=compressed --no-source-map && sass assets/scss/admin.scss assets/css/admin.css --style=compressed --no-source-map",
 		"start": "sass assets/scss/contact-form.scss assets/css/contact-form.css --style=expanded --watch"
 	},
 	"devDependencies": {

@@ -20,3 +20,5 @@ define( 'AIV_CONTACT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AIV_CONTACT_URL', plugin_dir_url( __FILE__ ) );
 
 require_once AIV_CONTACT_PATH . 'includes/bootstrap.php';
+
+register_activation_hook( __FILE__, 'aiv_contact_activate' );

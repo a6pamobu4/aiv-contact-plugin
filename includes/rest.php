@@ -35,7 +35,19 @@ function aiv_contact_handle_rest_submission( WP_REST_Request $request ) {
 		$params = $request->get_body_params();
 	}
 
-	$data = aiv_contact_sanitize_submission( is_array( $params ) ? $params : array() );
+	$params  = is_array( $params ) ? $params : array();
+	$form_id = isset( $params['form_id'] ) ? absint( $params['form_id'] ) : 0;
+	$form    = $form_id > 0 ? aiv_contact_get_form_config( $form_id ) : null;
+
+	if ( null === $form ) {
+		return new WP_Error(
+			'aiv_contact_invalid_form',
+			__( 'The selected form is not available.', 'aiv-contact' ),
+			array( 'status' => 404 )
+		);
+	}
+
+	$data = aiv_contact_sanitize_submission( $params, (array) $form['fields'] );
 
 	if ( ! wp_verify_nonce( $data['_wpnonce'], 'wp_rest' ) ) {
 		return new WP_Error(
@@ -45,7 +57,7 @@ function aiv_contact_handle_rest_submission( WP_REST_Request $request ) {
 		);
 	}
 
-	$validation_error = aiv_contact_validate_submission( $data );
+	$validation_error = aiv_contact_validate_submission( $data, (array) $form['fields'], $params );
 
 	if ( $validation_error instanceof WP_Error ) {
 		return $validation_error;
@@ -57,7 +69,7 @@ function aiv_contact_handle_rest_submission( WP_REST_Request $request ) {
 		return $spam_error;
 	}
 
-	if ( ! aiv_contact_send_email( $data ) ) {
+	if ( ! aiv_contact_send_email( $form, $data ) ) {
 		return new WP_Error(
 			'aiv_contact_mail_failed',
 			__( 'The request could not be sent. Please try again later.', 'aiv-contact' ),
@@ -68,7 +80,7 @@ function aiv_contact_handle_rest_submission( WP_REST_Request $request ) {
 	return rest_ensure_response(
 		array(
 			'success' => true,
-			'message' => __( 'Thank you. Your request has been sent.', 'aiv-contact' ),
+			'message' => (string) $form['success_message'],
 		)
 	);
 }

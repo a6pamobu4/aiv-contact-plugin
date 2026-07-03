@@ -10,56 +10,118 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Send the contact form email.
  *
- * @param array<string,string> $data Sanitized submission data.
+ * @param array<string,mixed> $form Form config.
+ * @param array<string,mixed> $data Sanitized submission data.
  * @return bool
  */
-function aiv_contact_send_email( array $data ): bool {
-	$recipient = defined( 'AIV_CONTACT_RECIPIENT_EMAIL' ) ? AIV_CONTACT_RECIPIENT_EMAIL : get_option( 'admin_email' );
-	$recipient = apply_filters( 'aiv_contact_recipient_email', $recipient, $data );
-	$recipient = sanitize_email( (string) $recipient );
+function aiv_contact_send_email( array $form, array $data ): bool {
+	$recipients = aiv_contact_get_valid_recipients( (string) $form['recipients'], $form, $data );
 
-	if ( ! is_email( $recipient ) ) {
+	if ( empty( $recipients ) ) {
 		return false;
 	}
 
 	$site_name = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-	$subject   = sprintf(
-		/* translators: %s: Site name. */
-		__( 'Новая заявка с сайта: %s', 'aiv-contact' ),
-		$site_name
-	);
+	$subject   = str_replace( '{site_name}', $site_name, (string) $form['subject'] );
+	$body      = aiv_contact_build_email_body( $form, $data );
+	$headers   = array( 'Content-Type: text/plain; charset=UTF-8' );
+	$reply_to  = aiv_contact_get_reply_to_email( $form, $data );
 
-	$body = implode(
-		"\n\n",
-		array(
-			sprintf(
-				/* translators: %s: Submitted name. */
-				__( 'Name: %s', 'aiv-contact' ),
-				$data['name']
-			),
-			sprintf(
-				/* translators: %s: Submitted contact details. */
-				__( 'Contact: %s', 'aiv-contact' ),
-				$data['contact']
-			),
-			sprintf(
-				/* translators: %s: Selected project type. */
-				__( 'Project type: %s', 'aiv-contact' ),
-				$data['project_type']
-			),
-			sprintf(
-				/* translators: %s: Submitted message. */
-				__( 'Message: %s', 'aiv-contact' ),
-				$data['message']
-			),
-		)
-	);
-
-	$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
-
-	if ( is_email( $data['contact'] ) ) {
-		$headers[] = 'Reply-To: ' . sanitize_email( $data['contact'] );
+	if ( '' !== $reply_to ) {
+		$headers[] = 'Reply-To: ' . $reply_to;
 	}
 
-	return wp_mail( $recipient, $subject, $body, $headers );
+	return wp_mail( $recipients, $subject, $body, $headers );
+}
+
+/**
+ * Resolve and validate recipient emails.
+ *
+ * @param string              $recipient_string Raw recipients.
+ * @param array<string,mixed> $form             Form config.
+ * @param array<string,mixed> $data             Submission data.
+ * @return string[]
+ */
+function aiv_contact_get_valid_recipients( string $recipient_string, array $form, array $data ): array {
+	$recipient_string = defined( 'AIV_CONTACT_RECIPIENT_EMAIL' ) ? (string) AIV_CONTACT_RECIPIENT_EMAIL : $recipient_string;
+	$recipient_string = (string) apply_filters( 'aiv_contact_recipient_email', $recipient_string, $data, $form );
+	$recipients       = array_map( 'trim', explode( ',', $recipient_string ) );
+	$valid            = array();
+
+	foreach ( $recipients as $recipient ) {
+		$recipient = sanitize_email( $recipient );
+
+		if ( is_email( $recipient ) ) {
+			$valid[] = $recipient;
+		}
+	}
+
+	if ( empty( $valid ) ) {
+		$admin_email = sanitize_email( (string) get_option( 'admin_email' ) );
+
+		if ( is_email( $admin_email ) ) {
+			$valid[] = $admin_email;
+		}
+	}
+
+	return array_values( array_unique( $valid ) );
+}
+
+/**
+ * Build dynamic plain text email body.
+ *
+ * @param array<string,mixed> $form Form config.
+ * @param array<string,mixed> $data Submission data.
+ * @return string
+ */
+function aiv_contact_build_email_body( array $form, array $data ): string {
+	$lines = array();
+
+	foreach ( (array) $form['fields'] as $field ) {
+		$field = aiv_contact_sanitize_field_config( (array) $field );
+		$name  = (string) $field['name'];
+
+		if ( 'hidden' === $field['type'] ) {
+			continue;
+		}
+
+		$value = (string) ( $data['fields'][ $name ] ?? '' );
+
+		if ( '' === $value ) {
+			$value = __( '(empty)', 'aiv-contact' );
+		}
+
+		$lines[] = sprintf(
+			'%1$s: %2$s',
+			(string) $field['label'],
+			$value
+		);
+	}
+
+	return implode( "\n\n", $lines );
+}
+
+/**
+ * Get the first submitted valid email for Reply-To.
+ *
+ * @param array<string,mixed> $form Form config.
+ * @param array<string,mixed> $data Submission data.
+ * @return string
+ */
+function aiv_contact_get_reply_to_email( array $form, array $data ): string {
+	foreach ( (array) $form['fields'] as $field ) {
+		$field = aiv_contact_sanitize_field_config( (array) $field );
+
+		if ( 'email' !== $field['type'] ) {
+			continue;
+		}
+
+		$value = sanitize_email( (string) ( $data['fields'][ (string) $field['name'] ] ?? '' ) );
+
+		if ( is_email( $value ) ) {
+			return $value;
+		}
+	}
+
+	return '';
 }

@@ -9,6 +9,12 @@
 	gap: 0.35rem;
 }
 
+.aiv-contact-field-half,
+.aiv-contact-field-third,
+.aiv-contact-field-two-thirds {
+	max-width: 100%;
+}
+
 .aiv-contact-label {
 	font-weight: 600;
 }
@@ -31,8 +37,46 @@
 }
 
 .aiv-contact-consent {
+	display: grid;
 	grid-template-columns: auto 1fr;
+	gap: 0.5rem;
 	align-items: start;
+}
+
+.aiv-contact-radio-group {
+	padding: 0;
+	border: 0;
+	margin: 0;
+}
+
+.aiv-contact-radio-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.aiv-contact-radio-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	cursor: pointer;
+}
+
+.aiv-contact-radio-button span {
+	display: inline-flex;
+	padding: 0.55rem 0.85rem;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+}
+
+.aiv-contact-radio-button input:checked + span {
+	color: #fff;
+	background: #111;
+}
+
+.aiv-contact-radio-button input:focus-visible + span {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
 }
 
 .aiv-contact-submit {
@@ -63,4 +107,29 @@
 	width: 1px;
 	height: 1px;
 	overflow: hidden;
+}
+
+@media (min-width: 640px) {
+	.aiv-contact-form {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+
+	.aiv-contact-field,
+	.aiv-contact-status,
+	.aiv-contact-submit,
+	.aiv-contact-hp {
+		grid-column: 1 / -1;
+	}
+
+	.aiv-contact-field-half {
+		grid-column: span 3;
+	}
+
+	.aiv-contact-field-third {
+		grid-column: span 2;
+	}
+
+	.aiv-contact-field-two-thirds {
+		grid-column: span 4;
+	}
 }

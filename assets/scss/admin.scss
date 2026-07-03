@@ -1,0 +1,56 @@
+.aiv-contact-admin-grid,
+.aiv-contact-field-grid {
+	display: grid;
+	gap: 1rem;
+}
+
+.aiv-contact-admin-field {
+	display: grid;
+	gap: 0.35rem;
+	margin: 0;
+}
+
+.aiv-contact-admin-field label {
+	font-weight: 600;
+}
+
+.aiv-contact-admin-field input[type="text"],
+.aiv-contact-admin-field select,
+.aiv-contact-admin-field textarea {
+	width: 100%;
+	max-width: 100%;
+}
+
+.aiv-contact-field-list {
+	display: grid;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.aiv-contact-field-item {
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.aiv-contact-field-item-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.aiv-contact-admin-field-checkbox {
+	align-content: end;
+}
+
+@media (min-width: 783px) {
+	.aiv-contact-admin-grid,
+	.aiv-contact-field-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.aiv-contact-admin-field-wide {
+		grid-column: 1 / -1;
+	}
+}
