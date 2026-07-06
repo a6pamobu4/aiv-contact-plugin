@@ -105,14 +105,26 @@ function aiv_contact_resolve_shortcode_form( int $form_id, string $slug ): ?arra
  * @param string              $id    Unique field ID.
  */
 function aiv_contact_render_frontend_field( array $field, string $id ): void {
-	$field       = aiv_contact_sanitize_field_config( $field );
-	$name        = (string) $field['name'];
-	$type        = (string) $field['type'];
-	$label       = (string) $field['label'];
-	$placeholder = (string) $field['placeholder'];
-	$required    = ! empty( $field['required'] );
-	$options     = (array) $field['options'];
-	$width       = sanitize_html_class( (string) $field['width'] );
+	$field           = aiv_contact_sanitize_field_config( $field );
+	$name            = (string) $field['name'];
+	$type            = (string) $field['type'];
+	$label           = (string) $field['label'];
+	$placeholder     = (string) $field['placeholder'];
+	$required        = ! empty( $field['required'] );
+	$options         = (array) $field['options'];
+	$width           = sanitize_html_class( (string) $field['width'] );
+	$condition_field = (string) $field['conditional_field'];
+	$condition_value = (string) $field['conditional_value'];
+	$is_conditional  = '' !== $condition_field && '' !== $condition_value;
+	$field_classes   = array(
+		'aiv-contact-field',
+		'aiv-contact-field-' . $width,
+		'aiv-contact-field-type-' . sanitize_html_class( $type ),
+	);
+
+	if ( $is_conditional ) {
+		$field_classes[] = 'aiv-contact-field-hidden';
+	}
 
 	if ( 'hidden' === $type ) {
 		?>
@@ -121,18 +133,18 @@ function aiv_contact_render_frontend_field( array $field, string $id ): void {
 		return;
 	}
 	?>
-	<div class="aiv-contact-field aiv-contact-field-<?php echo esc_attr( $width ); ?> aiv-contact-field-type-<?php echo esc_attr( sanitize_html_class( $type ) ); ?>">
+	<div class="<?php echo esc_attr( implode( ' ', $field_classes ) ); ?>" <?php echo $is_conditional ? 'data-aiv-contact-condition-field="' . esc_attr( $condition_field ) . '" data-aiv-contact-condition-value="' . esc_attr( $condition_value ) . '" aria-hidden="true"' : ''; ?>>
 		<?php if ( 'checkbox' === $type ) : ?>
 			<div class="aiv-contact-consent">
-				<input id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="checkbox" value="1" <?php echo $required ? 'required' : ''; ?>>
+				<input id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="checkbox" value="1" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>
 				<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
 			</div>
 		<?php elseif ( 'textarea' === $type ) : ?>
 			<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
-			<textarea class="aiv-contact-textarea" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" rows="6" placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?>></textarea>
+			<textarea class="aiv-contact-textarea" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" rows="6" placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>></textarea>
 		<?php elseif ( 'select' === $type ) : ?>
 			<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
-			<select class="aiv-contact-select" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>>
+			<select class="aiv-contact-select" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>
 				<option value=""><?php esc_html_e( 'Select an option', 'aiv-contact' ); ?></option>
 				<?php foreach ( $options as $option ) : ?>
 					<option value="<?php echo esc_attr( (string) $option ); ?>"><?php echo esc_html( (string) $option ); ?></option>
@@ -145,7 +157,7 @@ function aiv_contact_render_frontend_field( array $field, string $id ): void {
 					<?php foreach ( $options as $option_index => $option ) : ?>
 						<?php $option_id = $id . '-' . (int) $option_index; ?>
 						<label class="aiv-contact-radio-button" for="<?php echo esc_attr( $option_id ); ?>">
-							<input id="<?php echo esc_attr( $option_id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="radio" value="<?php echo esc_attr( (string) $option ); ?>" <?php echo $required ? 'required' : ''; ?>>
+							<input id="<?php echo esc_attr( $option_id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="radio" value="<?php echo esc_attr( (string) $option ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>
 							<span><?php echo esc_html( (string) $option ); ?></span>
 						</label>
 					<?php endforeach; ?>
@@ -153,7 +165,7 @@ function aiv_contact_render_frontend_field( array $field, string $id ): void {
 			</fieldset>
 		<?php else : ?>
 			<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
-			<input class="aiv-contact-input" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="<?php echo esc_attr( $type ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?>>
+			<input class="aiv-contact-input" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="<?php echo esc_attr( $type ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>
 		<?php endif; ?>
 	</div>
 	<?php

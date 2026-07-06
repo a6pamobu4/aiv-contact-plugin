@@ -249,8 +249,12 @@ function aiv_contact_normalize_fields( array $fields ): array {
  * @return array<string,mixed>
  */
 function aiv_contact_sanitize_field_config( array $field ): array {
-	$type  = isset( $field['type'] ) ? sanitize_key( (string) $field['type'] ) : 'text';
-	$width = isset( $field['width'] ) ? sanitize_key( (string) $field['width'] ) : 'full';
+	$type                  = isset( $field['type'] ) ? sanitize_key( (string) $field['type'] ) : 'text';
+	$width                 = isset( $field['width'] ) ? sanitize_key( (string) $field['width'] ) : 'full';
+	$name                  = isset( $field['name'] ) ? sanitize_key( (string) $field['name'] ) : '';
+	$has_conditional_field = array_key_exists( 'conditional_field', $field );
+	$conditional_field     = $has_conditional_field ? sanitize_key( (string) $field['conditional_field'] ) : '';
+	$conditional_value     = array_key_exists( 'conditional_value', $field ) ? sanitize_text_field( (string) $field['conditional_value'] ) : '';
 
 	if ( ! in_array( $type, aiv_contact_get_supported_field_types(), true ) ) {
 		$type = 'text';
@@ -260,15 +264,41 @@ function aiv_contact_sanitize_field_config( array $field ): array {
 		$width = 'full';
 	}
 
+	if ( ! $has_conditional_field && 'email' === $name ) {
+		$conditional_field = 'contact_method';
+		$conditional_value = 'Email';
+	}
+
 	return array(
-		'label'       => isset( $field['label'] ) ? sanitize_text_field( (string) $field['label'] ) : '',
-		'name'        => isset( $field['name'] ) ? sanitize_key( (string) $field['name'] ) : '',
-		'type'        => $type,
-		'required'    => ! empty( $field['required'] ),
-		'placeholder' => isset( $field['placeholder'] ) ? sanitize_text_field( (string) $field['placeholder'] ) : '',
-		'options'     => aiv_contact_sanitize_options( $field['options'] ?? array() ),
-		'width'       => $width,
+		'label'             => isset( $field['label'] ) ? sanitize_text_field( (string) $field['label'] ) : '',
+		'name'              => $name,
+		'type'              => $type,
+		'required'          => ! empty( $field['required'] ),
+		'placeholder'       => isset( $field['placeholder'] ) ? sanitize_text_field( (string) $field['placeholder'] ) : '',
+		'options'           => aiv_contact_sanitize_options( $field['options'] ?? array() ),
+		'width'             => $width,
+		'conditional_field' => $conditional_field,
+		'conditional_value' => $conditional_value,
 	);
+}
+
+/**
+ * Determine whether a configured field is active for submitted values.
+ *
+ * @param array<string,mixed>  $field  Field config.
+ * @param array<string,string> $values Submitted field values.
+ * @return bool
+ */
+function aiv_contact_is_conditional_field_active( array $field, array $values ): bool {
+	$field             = aiv_contact_sanitize_field_config( $field );
+	$conditional_field = (string) $field['conditional_field'];
+	$conditional_value = (string) $field['conditional_value'];
+
+	if ( '' === $conditional_field || '' === $conditional_value ) {
+		return true;
+	}
+
+	return isset( $values[ $conditional_field ] ) && $conditional_value === (string) $values[ $conditional_field ];
 }
 
 /**

@@ -25,6 +25,8 @@ Each form also has a repeatable field builder. Field settings include:
 - Placeholder
 - Options
 - Width
+- Show when field
+- Show when value
 
 Supported field types:
 
@@ -38,6 +40,8 @@ Supported field types:
 - `hidden`
 
 For `select` and `radio-buttons`, enter one option per line in the options textarea.
+
+Conditional fields are shown only when `Show when field` matches `Show when value`. The default email field appears when the contact method value is `Email`.
 
 ## Shortcodes
 

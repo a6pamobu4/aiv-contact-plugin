@@ -88,11 +88,24 @@ function aiv_contact_validate_submission( array $data, array $fields, array $par
 	}
 
 	foreach ( $fields as $field ) {
-		$name     = (string) $field['name'];
-		$type     = (string) $field['type'];
-		$label    = (string) $field['label'];
-		$value    = (string) ( $data['fields'][ $name ] ?? '' );
-		$required = ! empty( $field['required'] );
+		$name      = (string) $field['name'];
+		$type      = (string) $field['type'];
+		$label     = (string) $field['label'];
+		$value     = (string) ( $data['fields'][ $name ] ?? '' );
+		$required  = ! empty( $field['required'] );
+		$is_active = aiv_contact_is_conditional_field_active( $field, (array) $data['fields'] );
+
+		if ( ! $is_active ) {
+			if ( '' !== $value ) {
+				return new WP_Error(
+					'aiv_contact_inactive_field',
+					__( 'The form contains a value for an inactive field.', 'aiv-contact' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			continue;
+		}
 
 		if ( $required && '' === $value ) {
 			return new WP_Error(

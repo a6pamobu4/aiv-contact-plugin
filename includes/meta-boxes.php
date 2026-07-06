@@ -154,6 +154,14 @@ function aiv_contact_render_field_builder_item( array $field, $index ): void {
 				<label><?php esc_html_e( 'Options', 'aiv-contact' ); ?></label>
 				<textarea name="<?php echo esc_attr( $base . '[options]' ); ?>" rows="4"><?php echo esc_textarea( implode( "\n", (array) $field['options'] ) ); ?></textarea>
 			</p>
+			<p class="aiv-contact-admin-field">
+				<label><?php esc_html_e( 'Show when field', 'aiv-contact' ); ?></label>
+				<input name="<?php echo esc_attr( $base . '[conditional_field]' ); ?>" type="text" value="<?php echo esc_attr( (string) $field['conditional_field'] ); ?>">
+			</p>
+			<p class="aiv-contact-admin-field">
+				<label><?php esc_html_e( 'Show when value', 'aiv-contact' ); ?></label>
+				<input name="<?php echo esc_attr( $base . '[conditional_value]' ); ?>" type="text" value="<?php echo esc_attr( (string) $field['conditional_value'] ); ?>">
+			</p>
 		</div>
 	</div>
 	<?php
@@ -166,13 +174,15 @@ function aiv_contact_render_field_builder_item( array $field, $index ): void {
  */
 function aiv_contact_get_empty_field_config(): array {
 	return array(
-		'label'       => '',
-		'name'        => '',
-		'type'        => 'text',
-		'required'    => false,
-		'placeholder' => '',
-		'options'     => array(),
-		'width'       => 'full',
+		'label'             => '',
+		'name'              => '',
+		'type'              => 'text',
+		'required'          => false,
+		'placeholder'       => '',
+		'options'           => array(),
+		'width'             => 'full',
+		'conditional_field' => '',
+		'conditional_value' => '',
 	);
 }
 
