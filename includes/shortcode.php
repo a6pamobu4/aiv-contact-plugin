@@ -163,6 +163,9 @@ function aiv_contact_render_frontend_field( array $field, string $id ): void {
 					<?php endforeach; ?>
 				</div>
 			</fieldset>
+		<?php elseif ( 'tel' === $type ) : ?>
+			<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
+			<input class="aiv-contact-input" data-aiv-contact-phone id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="tel" inputmode="numeric" autocomplete="tel" maxlength="18" value="+7 " placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>
 		<?php else : ?>
 			<label class="aiv-contact-label" for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
 			<input class="aiv-contact-input" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" type="<?php echo esc_attr( $type ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" <?php echo $required ? 'required' : ''; ?> <?php echo $is_conditional ? 'disabled' : ''; ?>>

@@ -56,7 +56,7 @@ function aiv_contact_sanitize_field_value( $value, string $type ): string {
 	}
 
 	if ( 'tel' === $type ) {
-		return trim( preg_replace( '/[^0-9+\-\s().]/', '', $value ) ?? '' );
+		return aiv_contact_sanitize_phone_value( $value );
 	}
 
 	if ( 'checkbox' === $type ) {
@@ -64,6 +64,36 @@ function aiv_contact_sanitize_field_value( $value, string $type ): string {
 	}
 
 	return sanitize_text_field( $value );
+}
+
+/**
+ * Sanitize and normalize a Russian phone value.
+ *
+ * @param string $value Raw phone value.
+ * @return string
+ */
+function aiv_contact_sanitize_phone_value( string $value ): string {
+	$digits = preg_replace( '/\D+/', '', $value ) ?? '';
+
+	if ( '' === $digits || '7' === $digits ) {
+		return '';
+	}
+
+	if ( 11 === strlen( $digits ) && in_array( $digits[0], array( '7', '8' ), true ) ) {
+		$digits = substr( $digits, 1 );
+	}
+
+	if ( 10 !== strlen( $digits ) ) {
+		return trim( preg_replace( '/[^0-9+\-\s().]/', '', $value ) ?? '' );
+	}
+
+	return sprintf(
+		'+7 (%s) %s-%s-%s',
+		substr( $digits, 0, 3 ),
+		substr( $digits, 3, 3 ),
+		substr( $digits, 6, 2 ),
+		substr( $digits, 8, 2 )
+	);
 }
 
 /**
@@ -123,6 +153,14 @@ function aiv_contact_validate_submission( array $data, array $fields, array $par
 			return new WP_Error(
 				'aiv_contact_invalid_email',
 				__( 'Please enter a valid email address.', 'aiv-contact' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( 'tel' === $type && '' !== $value && ! preg_match( '/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/', $value ) ) {
+			return new WP_Error(
+				'aiv_contact_invalid_phone',
+				__( 'Please enter a valid phone number.', 'aiv-contact' ),
 				array( 'status' => 400 )
 			);
 		}
