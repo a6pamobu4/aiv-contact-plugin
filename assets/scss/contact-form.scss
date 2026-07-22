@@ -47,11 +47,14 @@
 }
 
 .aiv-contact-radio-group {
-	display: grid;
-	gap: 0.35rem;
 	padding: 0;
 	border: 0;
 	margin: 0;
+}
+
+.aiv-contact-radio-group .aiv-contact-label {
+	display: block;
+	margin-bottom: 0.35rem;
 }
 
 .aiv-contact-radio-buttons {
